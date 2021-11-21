@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <!-- 设置属性文件 -->
+    <properties resource="jdbc.properties"/>
+    
+    <!-- 设置MyBatis运行时的参数 -->
+    <settings>
+        <!-- 开启自动驼峰命名映射（下划线转成驼峰命名法） -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        
+        <!-- 设置打印日志信息 -->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+
+        <!-- 开启延迟加载 -->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <setting name="aggressiveLazyLoading" value="false"/>
+
+        <!-- 开启全局二级缓存配置 -->
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+
+    <!-- 为JavaBean设置别名 -->
+    <typeAliases>
+        <!-- 为单个JavaBean设置别名 -->
+        <!--<typeAlias type="com.key.mybatis.entity.User" alias="u"/>-->
+        
+        <!-- 批量设置别名 -->
+        <!--<package name="com.key.mybatis.entity"/>-->
+    </typeAliases>
+
+    <!-- 配置环境 -->
+    <environments default="dev_mysql">
+        <environment id="dev_mysql">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${prop.driver}"/>
+                <property name="url" value="${prop.url}"/>
+                <property name="username" value="${prop.username}"/>
+                <property name="password" value="${prop.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!-- 设置数据库厂商标识 -->
+    <databaseIdProvider type="DB_VENDOR">
+        <property name="MySQL" value="mysql"/>
+        <property name="Oracle" value="oracle"/>
+        <property name="SQL Server" value="sqlserver"/>
+    </databaseIdProvider>
+
+    <!-- 映射器 -->
+    <mappers>
+        <!-- 注册UserDao映射文件 -->
+        <!--<mapper resource="com/key/mybatis/dao/UserDao.xml"/>-->
+
+        <!-- 注册UserDao接口 -->
+        <!--<mapper class="com.key.mybatis.dao.UserDao"/>-->
+        
+        <!-- 批量注册 -->
+        <package name="com.key.mybatis.dao"/>
+    </mappers>
+</configuration>

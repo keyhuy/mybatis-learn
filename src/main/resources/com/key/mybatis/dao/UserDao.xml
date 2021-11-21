@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.key.mybatis.dao.UserDao">
+
+    <!-- 开启二级缓存 -->
+    <cache/>
+
+    <!--
+        SQL标签编写
+    -->
+
+    <!-- HelloWord测试SQL1.0 -->
+    <select id="selectUser" resultType="com.key.mybatis.entity.User" databaseId="mysql">
+        select *
+        from `user`
+        where `user_id` = #{user_id}
+    </select>
+
+    <!-- HelloWord测试SQL2.0 -->
+    <select id="getAllUsers" resultType="com.key.mybatis.entity.User">
+        select *
+        from `user`
+    </select>
+
+    <!--===================================================================-->
+
+    <!-- 根据if标签条件查询 -->
+    <select id="getUsersByIfCondition" resultType="com.key.mybatis.entity.User">
+        select *
+        from `user`
+
+        <!-- 使用where标签代替where子句
+             - where标签代替了where子句，因此where就不用再添加
+             - if标签放在where标签里面
+        -->
+        <where>
+            <!-- id不为null，用id查询 -->
+            <if test="userid != null">
+                `user_id` = #{userid}
+            </if>
+            <!-- 姓名不为null，用姓名查询 -->
+            <if test="username != null and username.trim() != ''">
+                or `user_name` = #{username}
+            </if>
+            <!-- 密码不为null，用密码查询 -->
+            <if test="password != null">
+                or `password` = #{password};
+            </if>
+        </where>
+    </select>
+    
+    <!-- 根据choose标签查询 -->
+    <select id="getUsersByChooseCondition" resultType="com.key.mybatis.entity.User">
+        select *
+        from `user`
+        <!-- 以后都写where标签 -->
+        <where>
+            <!-- 使用choose根据条件选择其中一种情况 -->
+            <choose>
+                <when test="userid != null">
+                    `user_id` = #{userid}
+                </when>
+                <when test="username != null and username.trim() != ''">
+                    `user_name` like #{username}
+                </when>
+                <when test="password != null">
+                    `password` = #{password}
+                </when>
+                <!-- 默认选择，如果when条件都不满足，就查询全部信息 -->
+                <otherwise>
+                    1=1
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <!-- 使用set标签更新用户信息 -->
+    <update id="updateUserBySetCondition">
+        update `user`
+        <!-- 使用set标签动态拼接更新内容 -->
+        <set>
+            <!-- 使用if标签动态获取更新内容 -->
+            <if test="username != null">
+                `user_name` = #{username},
+            </if>
+            <if test="password != null">
+                `password` = #{password}
+            </if>
+        </set>
+        <!-- 最后还有查询条件的拼接，使用where -->
+        <where>
+            `user_id` = #{userid}
+        </where>
+    </update>
+
+    <!-- 根据指定的id集合查询出对应的用户信息 -->
+    <select id="getUsersByForeachCondition" resultType="com.key.mybatis.entity.User">
+        select *
+        from `user`
+        <where>
+            `user_id` in
+            <foreach collection="ids" item="uId" separator="," open="(" close=")">
+                #{uId}
+            </foreach>
+        </where>
+    </select>
+
+    <!-- 批量插入多条用户记录1.0 -->
+ <!--   <insert id="batchInsertUsersByForeach">
+        insert into `user`(`user_name`, `password`)
+        values
+        &lt;!&ndash; 使用foreach循环遍历每一条插入数据 &ndash;&gt;
+        <foreach collection="users" item="u" separator=",">
+            (#{u.username}, #{u.password})
+        </foreach>
+    </insert>-->
+
+    <!-- 批量插入2.0 -->
+    <insert id="batchInsertUsersByForeach">
+        <!-- 直接使用foreach遍历多次insert语句，每条语句之间用;隔开 -->
+        <foreach collection="users" item="u" separator=";">
+            insert into `user`(`user_name`, `password`)
+            values(#{u.username}, #{u.password})
+        </foreach>
+    </insert>
+
+    <!--==================================================================-->
+
+    <!-- 使用内置参数1.0 -->
+    <select id="listUsersByBuiltInParam" resultType="com.key.mybatis.entity.User">
+        <!-- 根据数据库厂商标识的别名来选择查询数据库表 -->
+        <if test="_databaseId == 'mysql'">
+            <!-- mysql下查询user表 -->
+            select * from `user`
+        </if>
+        <if test="_databaseId == 'oracle'">
+            <!-- oracle下查询employee -->
+            select * from `employee`
+        </if>
+    </select>
+
+    <!-- 使用内置参数2.0 -->
+    <select id="getUserByInnerParam" resultType="com.key.mybatis.entity.User">
+        select *
+        from `user`
+        <if test="_parameter.param1 == 4">
+            where `user_id` = #{arg0}
+        </if>
+        <if test="param1 == 2">
+            where `user_id` = #{arg0}
+        </if>
+    </select>
+
+    <!-- 根据姓名关键字模糊查询 -->
+    <select id="listUsersByBind" resultType="com.key.mybatis.entity.User">
+        <!-- 使用bind标签绑定新的参数 -->
+        <bind name="newName" value="'%' + nameKey + '%'"/>
+        select *
+        from `user`
+        where `user_name` like #{newName};
+    </select>
+
+    <!-- 使用sql标签和include标签 -->
+    <insert id="insertUserBySqlAndInclude">
+        insert into `user` (
+            <include refid="insertColumn">
+                <property name="pwd" value="password"/>
+            </include>
+        )
+        values(#{username}, #{password})
+    </insert>
+
+    <!-- 抽取可重用SQL语句 -->
+    <sql id="insertColumn">
+        `user_name`, ${pwd}
+    </sql>
+
+    <!-- 根据id查询用户信息 -->
+    <select id="getUserById" resultType="com.key.mybatis.entity.User">
+        select *
+        from `user`
+        where `user_id` = #{userId};
+    </select>
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.key.mybatis.dao.DepartmentDao">
+
+    <!-- 根据id查询部门id -->
+    <select id="getDeptById" resultType="com.key.mybatis.entity.Department">
+        select *
+        from `department`
+        where `dept_id` = #{deptId};
+    </select>
+
+    <!-- 设置结果集映射规则 -->
+    <resultMap id="collQuery" type="com.key.mybatis.entity.Department">
+        <!-- 部门主键 -->
+        <id column="dept_id" property="deptId"/>
+        <!-- 其他属性 -->
+        <result column="dept_name" property="deptName"/>
+
+        <!-- 设置集合类型属性（级联属性） -->
+        <collection property="empList" ofType="com.key.mybatis.entity.Employee">
+            <!-- 设置员工主键 -->
+            <id column="emp_id" property="empId"/>
+            <!-- 设置其他属性 -->
+            <result column="emp_name" property="empName"/>
+            <result column="gender" property="gender"/>
+            <result column="email" property="email"/>
+        </collection>
+    </resultMap>
+
+    <!-- 级联查询-根据id查询部门信息及其所有员工信息 -->
+    <select id="getDeptAndEmpListById" resultMap="collQuery">
+        select *
+        from `department` d
+        left join `employee` e
+        on d.`dept_id` = e.`dept_id`
+        where d.`dept_id` = #{depId};
+    </select>
+
+    <!-- 设置结果集映射规则 -->
+    <resultMap id="collQueryStep" type="com.key.mybatis.entity.Department">
+        <!-- 主键 -->
+        <id column="dept_id" property="deptId"/>
+        <!-- 其他属性 -->
+        <result column="dept_name" property="deptName"/>
+
+        <!-- 设置级联属性——通过collection标签实现分步查询 -->
+        <collection property="empList"
+                    select="com.key.mybatis.dao.EmployeeDao.getEesByDeptId"
+                    column="dept_id"/>
+    </resultMap>
+
+    <!-- 分步查询 -->
+    <select id="getDeptAndEesByIdStep" resultMap="collQueryStep">
+        select *
+        from `department`
+        where `dept_id` = #{deptId};
+    </select>
+</mapper>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.key.mybatis.dao.EmployeeDao">
+
+    <!-- 设置映射规则 -->
+    <resultMap id="cascadeQuery" type="com.key.mybatis.entity.Employee">
+        <!-- 设置主键映射规则 -->
+        <id column="emp_id" property="empId"/>
+        <!-- 设置其他属性的映射规则 -->
+        <result column="emp_name" property="empName"/>
+        <result column="gender" property="gender"/>
+        <result column="email" property="email"/>
+
+        <!-- 设置级联属性的映射规则1.0 -->
+<!--        <result column="dept_id" property="myDept.deptId"/>
+        <result column="dept_name" property="myDept.deptName"/>-->
+
+        <!-- 设置级联属性的映射规则2.0 -->
+        <association property="myDept" javaType="com.key.mybatis.entity.Department">
+            <!-- 设置被关联的JavaBean的映射规则 -->
+            <id column="dept_id" property="deptId"/>
+            <result column="dept_name" property="deptName"/>
+        </association>
+    </resultMap>
+
+    <!-- 级联查询 -->
+    <select id="getEmpAndDeptById" resultMap="cascadeQuery">
+        select e.`emp_id`, e.`emp_name`, e.`gender`, e.`email`, e.`dept_id`, d.`dept_name`
+        from `employee` e, `department` d
+        where e.`dept_id` = d.`dept_id` and
+              e.`emp_id` = #{empId};
+    </select>
+    
+    <!-- 分步查询的映射规则 -->
+    <resultMap id="stepQuery" type="com.key.mybatis.entity.Employee">
+        <!-- 主键 -->
+        <id column="emp_id" property="empId"/>
+        <!-- 其他属性 -->
+        <result column="emp_name" property="empName"/>
+        <result column="gender" property="gender"/>
+        <result column="email" property="email"/>
+
+        <!-- association实现分步查询 -->
+        <association property="myDept"
+                     select="com.key.mybatis.dao.DepartmentDao.getDeptById"
+                     column="dept_id"/>
+    </resultMap>
+    
+    <!-- 分步查询 -->
+    <select id="getEmpAndDeptByIdStep" resultMap="stepQuery">
+        select *
+        from `employee`
+        where `emp_id` = #{empId};
+    </select>
+
+    <!-- 根据部门id查询该部门下所有员工 -->
+    <select id="getEesByDeptId" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`
+        where `dept_id` = #{deptId};
+    </select>
+
+    <!--========================================================================-->
+    <!-- 查询所有员工信息 -->
+    <select id="getAllEmployees" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`;
+    </select>
+
+    <!-- 根据id查询单个员工信息 -->
+    <select id="getEmpById" resultType="com.key.mybatis.entity.Employee" parameterType="int">
+        select *
+        from `employee`
+        where emp_id = #{empId};
+    </select>
+
+    <!-- 根据id和姓名查询员工信息 -->
+    <select id="getEmpByIdAndName" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`
+        where `emp_id` = #{param1} and
+              `emp_name` = #{param2};
+    </select>
+
+
+    <!-- 根据单个POJO获取参数 -->
+    <select id="getEmpByEmpPo" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`
+        where `emp_id` = #{empId} and
+              `emp_name` = #{empName} and
+              `gender` = #{gender} and
+              `email` = #{email};
+    </select>
+
+    <!-- 根据单个Map集合获取参数 -->
+    <select id="getEmpByMap" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`
+        where `emp_id` = #{id} and
+              `emp_name` = #{name};
+    </select>
+
+    <!-- 根据员工姓名和用户id查询员工信息 -->
+    <select id="getEmpByNameAndUserId" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`
+        where `emp_name` = #{param1} and
+              `emp_id` = #{arg1.userid};
+    </select>
+
+    <!-- 根据集合获取参数 -->
+    <select id="getEmpByIdList" resultType="com.key.mybatis.entity.Employee">
+        select *
+        from `employee`
+        where `emp_id` = #{list[0]};
+    </select>
+
+    <!-- 添加一条员工记录 -->
+    <insert id="addEmp" parameterType="com.key.mybatis.entity.Employee"
+            useGeneratedKeys="true" keyProperty="empId" keyColumn="emp_id">
+        insert into `employee`(`emp_name`, `gender`, `email`, `dept_id`)
+        values(#{empName}, #{gender}, #{email}, 1);
+    </insert>
+
+    <!-- 更新员工信息 -->
+    <update id="updateEmpInfo" parameterType="com.key.mybatis.entity.Employee">
+        update `employee`
+        set `emp_name` = #{empName}, `gender` = #{gender}, `email` = #{email}
+        where emp_id = #{empId};
+    </update>
+
+    <!-- 根据id删除员工信息 -->
+    <delete id="deleteEmpById" parameterType="int">
+        delete
+        from `employee`
+        where emp_id = #{empId};
+    </delete>
+</mapper>
